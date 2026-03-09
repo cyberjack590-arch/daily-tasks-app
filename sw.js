@@ -1,5 +1,5 @@
-// Service Worker for PWA - Offline functionality & Push Notifications
-const CACHE_NAME = 'daily-tasks-v2';
+// Service Worker for Daily Tasks PWA
+const CACHE_NAME = 'daily-tasks-v3';
 const ASSETS = [
     './',
     './index.html',
@@ -13,10 +13,11 @@ const ASSETS = [
 
 // Install event - cache assets
 self.addEventListener('install', (event) => {
+    console.log('Service Worker: Installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Caching app assets');
+                console.log('Service Worker: Caching assets');
                 return cache.addAll(ASSETS);
             })
             .then(() => self.skipWaiting())
@@ -25,12 +26,13 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
+    console.log('Service Worker: Activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
+                        console.log('Service Worker: Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -80,52 +82,119 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
-// Push notification event
+// Push notification event - for server push notifications
 self.addEventListener('push', (event) => {
+    console.log('Service Worker: Push event received');
+    
+    let data = {};
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data = { body: event.data.text() };
+        }
+    }
+
     const options = {
-        body: event.data ? event.data.text() : 'لديك إشعار جديد',
+        body: data.body || 'لديك إشعار جديد',
         icon: './icon-192.png',
         badge: './icon-192.png',
-        vibrate: [100, 50, 100],
+        vibrate: [100, 50, 100, 50, 200],
         data: {
-            dateOfArrival: Date.now(),
-            primaryKey: 1
+            url: data.url || './index.html',
+            dateOfArrival: Date.now()
         },
         actions: [
-            { action: 'view', title: 'عرض' },
+            { action: 'open', title: 'فتح التطبيق' },
             { action: 'close', title: 'إغلاق' }
         ],
-        tag: 'task-notification',
-        renotify: true
+        tag: data.tag || 'push-notification',
+        renotify: true,
+        requireInteraction: data.requireInteraction || false
     };
 
     event.waitUntil(
-        self.registration.showNotification('المهام اليومية', options)
+        self.registration.showNotification(data.title || 'المهام اليومية', options)
     );
 });
 
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
+    console.log('Service Worker: Notification clicked');
     event.notification.close();
 
-    if (event.action === 'view' || !event.action) {
+    if (event.action === 'open' || !event.action) {
         event.waitUntil(
-            clients.openWindow('./index.html')
+            clients.openWindow(event.notification.data.url || './index.html')
         );
     }
 });
 
-// Background sync for data
+// Background sync for task reminders
 self.addEventListener('sync', (event) => {
-    if (event.tag === 'sync-tasks') {
-        event.waitUntil(
-            syncTasks()
-        );
+    console.log('Service Worker: Background sync triggered:', event.tag);
+    
+    if (event.tag === 'check-task-reminders') {
+        event.waitUntil(checkTaskReminders());
     }
 });
 
-async function syncTasks() {
-    // Background sync implementation
-    console.log('Background sync triggered');
+// Check task reminders in background
+async function checkTaskReminders() {
+    try {
+        // Get all clients
+        const clients = await self.clients.matchAll();
+        
+        if (clients.length > 0) {
+            // Send message to all open clients to check reminders
+            clients.forEach(client => {
+                client.postMessage({
+                    type: 'CHECK_REMINDERS',
+                    timestamp: Date.now()
+                });
+            });
+        }
+    } catch (error) {
+        console.error('Error in background sync:', error);
+    }
 }
+
+// Handle messages from the main app
+self.addEventListener('message', (event) => {
+    console.log('Service Worker: Message received:', event.data);
+    
+    if (event.data && event.data.type === 'SCHEDULE_NOTIFICATION') {
+        // Schedule a notification using setTimeout in service worker
+        const { title, body, delay, tag } = event.data;
+        
+        if (delay && delay > 0) {
+            setTimeout(() => {
+                self.registration.showNotification(title, {
+                    body: body,
+                    icon: './icon-192.png',
+                    badge: './icon-192.png',
+                    tag: tag || 'scheduled-notification',
+                    vibrate: [100, 50, 100],
+                    requireInteraction: false
+                });
+            }, delay);
+        }
+    }
+    
+    if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+        // Show notification immediately
+        const { title, body, tag, requireInteraction } = event.data;
+        
+        self.registration.showNotification(title, {
+            body: body,
+            icon: './icon-192.png',
+            badge: './icon-192.png',
+            tag: tag || 'app-notification',
+            vibrate: [100, 50, 100],
+            requireInteraction: requireInteraction || false
+        });
+    }
+});
+
+console.log('Service Worker: Loaded');
 

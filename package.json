@@ -1,0 +1,15 @@
+{
+  "name": "daily-tasks-pwa",
+  "version": "1.0.0",
+  "description": "Daily Tasks PWA with Push Notifications",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "generate-keys": "node -e \"const webpush = require('web-push'); console.log(JSON.stringify(webpush.generateVapidKeys()))\""
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "web-push": "^3.6.6"
+  }
+}
+

@@ -1345,8 +1345,30 @@
             background: var(--accent-secondary);
         }
 
+        .notification-permission-btn.subscribed {
+            background: var(--success);
+        }
+
         .notification-permission.hidden {
             display: none;
+        }
+
+        /* Push notification status */
+        .push-status {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: var(--radius-xs);
+            margin-top: 8px;
+        }
+
+        .push-status.active {
+            background: var(--success-soft);
+            color: var(--success);
+        }
+
+        .push-status.inactive {
+            background: var(--warning-soft);
+            color: var(--warning);
         }
 
         /* Timezone indicator */
