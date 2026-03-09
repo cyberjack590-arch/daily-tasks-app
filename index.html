@@ -1,0 +1,2681 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="المهام اليومية - تطبيق إنتاجية لتنظيم مهامك اليومية">
+    <title>المهام اليومية - Daily Tasks</title>
+    
+    <!-- PWA Icons -->
+    <link rel="icon" href="icon-192.png" type="image/png">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-512.png" sizes="512x512">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="المهام اليومية">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #e8eef4;
+            --bg-card: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-muted: #a0aec0;
+            --accent-primary: #6366f1;
+            --accent-secondary: #818cf8;
+            --accent-soft: #e0e7ff;
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+            --success: #10b981;
+            --success-soft: #d1fae5;
+            --warning: #f59e0b;
+            --warning-soft: #fef3c7;
+            --danger: #ef4444;
+            --danger-soft: #fee2e2;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            /* Priority Colors */
+            --priority-high: #ef4444;
+            --priority-high-soft: #fee2e2;
+            --priority-medium: #f59e0b;
+            --priority-medium-soft: #fef3c7;
+            --priority-low: #10b981;
+            --priority-low-soft: #d1fae5;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --accent-primary: #818cf8;
+            --accent-secondary: #a5b4fc;
+            --accent-soft: #312e81;
+            --accent-gradient: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+            --success: #34d399;
+            --success-soft: #064e3b;
+            --warning: #fbbf24;
+            --warning-soft: #78350f;
+            --danger: #f87171;
+            --danger-soft: #7f1d1d;
+            --border: #334155;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+            --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.5);
+            /* Priority Colors Dark */
+            --priority-high: #f87171;
+            --priority-high-soft: #7f1d1d;
+            --priority-medium: #fbbf24;
+            --priority-medium-soft: #78350f;
+            --priority-low: #34d399;
+            --priority-low-soft: #064e3b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: var(--transition);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-gradient);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .logo-text {
+            font-size: 22px;
+            font-weight: 800;
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Streak Badge */
+        .streak-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        /* Month Navigation */
+        .month-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-tertiary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+        }
+
+        .nav-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-card);
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .nav-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .current-month {
+            min-width: 140px;
+            text-align: center;
+        }
+
+        .month-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .year-name {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Header Stats */
+        .header-stats {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 8px 16px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            min-width: 80px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--accent-primary);
+        }
+
+        .stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .progress-percent {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent-primary);
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-gradient);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Quick Add FAB */
+        .fab-add-task {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 64px;
+            height: 64px;
+            background: var(--accent-gradient);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+            transition: var(--transition);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab-add-task:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Calendar Grid */
+        .calendar-section {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .calendar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 8px 0;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            font-size: 14px;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .calendar-day.today {
+            border-color: var(--accent-primary);
+            background: var(--accent-soft);
+        }
+
+        .calendar-day.selected {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .calendar-day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .calendar-day.empty:hover {
+            background: transparent;
+        }
+
+        /* Day status indicators */
+        .calendar-day.completed {
+            background: var(--success-soft);
+            color: var(--success);
+        }
+
+        .calendar-day.completed.selected {
+            background: var(--success);
+            color: white;
+        }
+
+        .calendar-day.partial {
+            background: var(--warning-soft);
+            color: var(--warning);
+        }
+
+        .calendar-day.partial.selected {
+            background: var(--warning);
+            color: white;
+        }
+
+        .calendar-day.failed {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+
+        .calendar-day.failed.selected {
+            background: var(--danger);
+            color: white;
+        }
+
+        .day-status-icon {
+            font-size: 10px;
+            margin-top: 2px;
+        }
+
+        /* Weeks Grid */
+        .weeks-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .weeks-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .week-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .week-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .week-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .week-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .week-days {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .day-card {
+            flex: 1;
+            min-width: 60px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-xs);
+            padding: 8px 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+            position: relative;
+        }
+
+        .day-card:hover {
+            border-color: var(--accent-primary);
+            background: var(--accent-soft);
+        }
+
+        .day-card.today {
+            border-color: var(--accent-primary);
+            background: var(--accent-soft);
+        }
+
+        .day-card.has-tasks::after {
+            content: '';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 6px;
+            height: 6px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+        }
+
+        .day-number {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .day-tasks-count {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .day-card.completed .day-tasks-count {
+            color: var(--success);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Tasks Panel */
+        .tasks-panel {
+            min-height: 250px;
+        }
+
+        .selected-date {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 12px;
+            padding: 8px;
+            background: var(--accent-soft);
+            border-radius: var(--radius-xs);
+            text-align: center;
+        }
+
+        /* Task Input Group - Enhanced */
+        .task-input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .task-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 13px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .task-time-input {
+            width: 90px;
+            padding: 10px 8px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 12px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .task-time-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        /* Priority Select */
+        .priority-select {
+            width: 90px;
+            padding: 10px 8px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 12px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .priority-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .priority-select.priority-high {
+            border-color: var(--priority-high);
+            color: var(--priority-high);
+        }
+
+        .priority-select.priority-medium {
+            border-color: var(--priority-medium);
+            color: var(--priority-medium);
+        }
+
+        .priority-select.priority-low {
+            border-color: var(--priority-low);
+            color: var(--priority-low);
+        }
+
+        .add-task-btn {
+            padding: 10px 16px;
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .add-task-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .tasks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-xs);
+            transition: var(--transition);
+            border-right: 4px solid transparent;
+        }
+
+        .task-item:hover {
+            background: var(--bg-primary);
+        }
+
+        /* Priority indicator on task */
+        .task-item.priority-high {
+            border-right-color: var(--priority-high);
+        }
+
+        .task-item.priority-medium {
+            border-right-color: var(--priority-medium);
+        }
+
+        .task-item.priority-low {
+            border-right-color: var(--priority-low);
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .task-checkbox:hover {
+            border-color: var(--success);
+        }
+
+        .task-checkbox.checked {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .task-checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-text {
+            font-size: 13px;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .task-time {
+            font-size: 11px;
+            color: var(--accent-primary);
+            margin-top: 2px;
+        }
+
+        .task-item.completed .task-time {
+            color: var(--text-muted);
+        }
+
+        .task-reminder-icon {
+            font-size: 12px;
+            margin-right: 4px;
+        }
+
+        /* Priority Badge */
+        .priority-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .priority-badge.high {
+            background: var(--priority-high-soft);
+            color: var(--priority-high);
+        }
+
+        .priority-badge.medium {
+            background: var(--priority-medium-soft);
+            color: var(--priority-medium);
+        }
+
+        .priority-badge.low {
+            background: var(--priority-low-soft);
+            color: var(--priority-low);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .task-action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            font-size: 12px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-action-btn:hover {
+            background: var(--bg-secondary);
+        }
+
+        .task-action-btn.edit:hover {
+            color: var(--accent-primary);
+        }
+
+        .task-action-btn.delete:hover {
+            color: var(--danger);
+        }
+
+        .empty-tasks {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--text-muted);
+        }
+
+        .empty-tasks-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+
+        /* Achievements Section */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .achievement-card {
+            padding: 12px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-xs);
+            text-align: center;
+        }
+
+        .achievement-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .achievement-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .achievement-label {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .motivation-message {
+            text-align: center;
+            padding: 12px;
+            background: var(--success-soft);
+            border-radius: var(--radius-xs);
+            font-size: 13px;
+            color: var(--success);
+            font-weight: 600;
+            display: none;
+        }
+
+        .motivation-message.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            height: 150px;
+            margin-top: 12px;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-info {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .footer-stat {
+            text-align: center;
+        }
+
+        .footer-stat-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .footer-stat-label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .footer-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: var(--transition);
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-soft);
+            transform: rotate(15deg);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 20px;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(20px) scale(0.95);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .modal-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 14px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            cursor: pointer;
+        }
+
+        .modal-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        /* Notification Banner */
+        .notification-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--warning);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            z-index: 2000;
+            transform: translateY(-100%);
+            transition: var(--transition);
+        }
+
+        .notification-banner.show {
+            transform: translateY(0);
+        }
+
+        /* Celebration */
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--success);
+            color: white;
+            padding: 30px 50px;
+            border-radius: var(--radius);
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            z-index: 3000;
+            display: none;
+            animation: celebratePop 0.5s ease;
+        }
+
+        .celebration.show {
+            display: block;
+        }
+
+        @keyframes celebratePop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .celebrate {
+            animation: pulse 0.5s ease-out;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px;
+            }
+
+            .header-left {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .logo-text {
+                font-size: 18px;
+            }
+
+            .month-nav {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .header-stats {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .stat-box {
+                min-width: 60px;
+                padding: 6px 10px;
+            }
+
+            .stat-value {
+                font-size: 16px;
+            }
+
+            .streak-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
+            .week-card {
+                padding: 12px;
+            }
+
+            .day-card {
+                min-width: 40px;
+                padding: 6px 2px;
+            }
+
+            .day-number {
+                font-size: 12px;
+            }
+
+            .footer {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-info {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .calendar-grid {
+                gap: 4px;
+            }
+
+            .calendar-day {
+                font-size: 12px;
+            }
+
+            .fab-add-task {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+                bottom: 20px;
+                left: 20px;
+            }
+
+            /* Task Input - Mobile */
+            .task-input-group {
+                flex-direction: column;
+            }
+
+            .task-input {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .task-time-input,
+            .priority-select {
+                width: 100%;
+            }
+
+            .task-input-group .add-task-btn {
+                width: 100%;
+            }
+
+            /* Tasks list - mobile */
+            .task-item {
+                flex-wrap: wrap;
+            }
+
+            .task-meta {
+                width: 100%;
+                margin-top: 4px;
+                padding-right: 34px; /* Checkbox width */
+            }
+
+            .task-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 4px;
+            }
+        }
+
+        /* Tablet Responsive */
+        @media (min-width: 769px) and (max-width: 1100px) {
+            .task-input-group {
+                flex-wrap: wrap;
+            }
+
+            .task-input {
+                flex: 1 1 200px;
+            }
+
+            .task-time-input,
+            .priority-select {
+                flex: 0 0 auto;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-muted);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+
+        /* Notification Permission Banner */
+        .notification-permission {
+            background: var(--accent-soft);
+            border-radius: var(--radius-xs);
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .notification-permission-text {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .notification-permission-btn {
+            padding: 8px 16px;
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-xs);
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .notification-permission-btn:hover {
+            background: var(--accent-secondary);
+        }
+
+        .notification-permission.hidden {
+            display: none;
+        }
+
+        /* Timezone indicator */
+        .timezone-indicator {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: var(--bg-tertiary);
+            padding: 4px 8px;
+            border-radius: var(--radius-xs);
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Permission Banner -->
+    <div class="notification-permission" id="notificationPermission">
+        <span class="notification-permission-text">🔔 هل تريد تفعيل إشعارات المهام؟</span>
+        <button class="notification-permission-btn" id="enableNotifications">تفعيل</button>
+    </div>
+
+    <!-- Celebration Popup -->
+    <div class="celebration" id="celebration">
+        <div style="font-size: 48px; margin-bottom: 10px;">🎉</div>
+        <div>ممتاز! لقد أنجزت جميع مهام اليوم</div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header animate-in">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">✅</div>
+                    <span class="logo-text">المهام اليومية</span>
+                </div>
+                <div class="month-nav">
+                    <button class="nav-btn" id="prevMonth" title="الشهر السابق">◀</button>
+                    <div class="current-month">
+                        <div class="month-name" id="currentMonthName">يناير</div>
+                        <div class="year-name" id="currentYear">2026</div>
+                    </div>
+                    <button class="nav-btn" id="nextMonth" title="الشهر التالي">▶</button>
+                </div>
+                <span class="timezone-indicator">🌍 توقيت مصر</span>
+            </div>
+            <div class="header-stats">
+                <div class="streak-badge" id="streakBadge">
+                    <span>🔥</span>
+                    <span id="streakCount">0</span>
+                    <span>أيام</span>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="totalTasks">0</div>
+                    <div class="stat-label">إجمالي</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="completedTasks">0</div>
+                    <div class="stat-label">مكتملة</div>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="تبديل السمة">
+                    🌙
+                </button>
+            </div>
+        </header>
+
+        <!-- Daily Progress Bar -->
+        <div class="progress-section animate-in" id="progressSection">
+            <div class="progress-header">
+                <span class="progress-title">تقدم اليوم</span>
+                <span class="progress-percent" id="dailyProgressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="dailyProgressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Calendar & Weeks -->
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Calendar -->
+                <div class="calendar-section animate-in">
+                    <div class="calendar-header">
+                        <span class="calendar-title">التقويم</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be rendered here -->
+                    </div>
+                </div>
+
+                <!-- Weeks Grid -->
+                <div class="weeks-container" id="weeksContainer">
+                    <!-- Weeks will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Tasks Panel -->
+                <div class="sidebar-card tasks-panel animate-in" style="animation-delay: 0.1s">
+                    <h3 class="sidebar-title">
+                        <span>📋</span>
+                        مهام اليوم
+                    </h3>
+                    <div class="selected-date" id="selectedDateDisplay">
+                        اختر يوماً
+                    </div>
+                    <div class="task-input-group">
+                        <input type="text" class="task-input" id="taskInput" placeholder="أضف مهمة جديدة...">
+                        <input type="time" class="task-time-input" id="taskTimeInput" title="تذكير">
+                        <select class="priority-select" id="taskPriorityInput" title="الأولوية">
+                            <option value="high">عالية</option>
+                            <option value="medium" selected>متوسطة</option>
+                            <option value="low">منخفضة</option>
+                        </select>
+                        <button class="add-task-btn" id="addTaskBtn">+</button>
+                    </div>
+                    <div class="tasks-list" id="tasksList">
+                        <div class="empty-tasks">
+                            <div class="empty-tasks-icon">📝</div>
+                            <p>اختر يوماً لعرض مهامه</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements -->
+                <div class="sidebar-card animate-in" style="animation-delay: 0.2s">
+                    <h3 class="sidebar-title">
+                        <span>🏆</span>
+                        الإنجازات
+                    </h3>
+                    <div class="achievements-grid">
+                        <div class="achievement-card">
+                            <div class="achievement-icon">📊</div>
+                            <div class="achievement-value" id="totalCompleted">0</div>
+                            <div class="achievement-label">إجمالي المنجز</div>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">🔥</div>
+                            <div class="achievement-value" id="bestStreak">0</div>
+                            <div class="achievement-label">أفضل سلسلة</div>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">📅</div>
+                            <div class="achievement-value" id="weekCompleted">0</div>
+                            <div class="achievement-label">هذا الأسبوع</div>
+                        </div>
+                        <div class="achievement-card">
+                            <div class="achievement-icon">⭐</div>
+                            <div class="achievement-value" id="currentStreak">0</div>
+                            <div class="achievement-label">السلسلة الحالية</div>
+                        </div>
+                    </div>
+                    <div class="motivation-message" id="motivationMessage">
+                        🎉 ممتاز! واصل التقدم!
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="sidebar-card animate-in" style="animation-delay: 0.3s">
+                    <h3 class="sidebar-title">
+                        <span>📈</span>
+                        إحصائيات الشهر
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer animate-in" style="animation-delay: 0.4s">
+            <div class="footer-info">
+                <div class="footer-stat">
+                    <div class="footer-stat-value" id="footerTotal">0</div>
+                    <div class="footer-stat-label">مهام الشهر</div>
+                </div>
+                <div class="footer-stat">
+                    <div class="footer-stat-value" id="footerCompleted">0</div>
+                    <div class="footer-stat-label">مكتملة</div>
+                </div>
+                <div class="footer-stat">
+                    <div class="footer-stat-value" id="footerPercent">0%</div>
+                    <div class="footer-stat-label">نسبة الإنجاز</div>
+                </div>
+            </div>
+            <div class="footer-actions">
+                <button class="btn btn-secondary" id="resetMonthBtn">
+                    <span>🔄</span>
+                    إعادة تعيين
+                </button>
+                <button class="btn btn-danger" id="clearAllDataBtn">
+                    <span>🗑️</span>
+                    مسح الكل
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Quick Add Task Modal -->
+    <div class="modal-overlay" id="quickAddModal">
+        <div class="modal">
+            <h3 class="modal-title">إضافة مهمة سريعة</h3>
+            <input type="text" class="modal-input" id="quickTaskInput" placeholder="ماذا تريد أن تفعل؟">
+            <input type="time" class="modal-input" id="quickTaskTime" placeholder="وقت التذكير (اختياري)">
+            <select class="modal-select" id="quickTaskPriority">
+                <option value="high">الأولوية: عالية</option>
+                <option value="medium" selected>الأولوية: متوسطة</option>
+                <option value="low">الأولوية: منخفضة</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelQuickAdd">إلغاء</button>
+                <button class="add-task-btn" id="confirmQuickAdd">إضافة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3 class="modal-title">تعديل المهمة</h3>
+            <input type="text" class="modal-input" id="editTaskInput">
+            <input type="time" class="modal-input" id="editTaskTime">
+            <select class="modal-select" id="editTaskPriority">
+                <option value="high">الأولوية: عالية</option>
+                <option value="medium" selected>الأولوية: متوسطة</option>
+                <option value="low">الأولوية: منخفضة</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelEditBtn">إلغاء</button>
+                <button class="add-task-btn" id="saveEditBtn">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal">
+            <h3 class="modal-title">تأكيد</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;" id="confirmMessage"></p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="confirmCancelBtn">إلغاء</button>
+                <button class="btn" style="background: var(--danger); color: white;" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FAB for Quick Add -->
+    <button class="fab-add-task" id="fabAddTask" title="إضافة مهمة سريعة">+</button>
+
+    <script>
+        // Egypt Timezone Configuration
+        const EGYPT_TIMEZONE = 'Africa/Cairo';
+        
+        // Get current time in Egypt timezone
+        function getEgyptNow() {
+            return new Date(new Date().toLocaleString('en-US', { timeZone: EGYPT_TIMEZONE }));
+        }
+
+        // Format date key using Egypt timezone
+        const formatDateKey = (year, month, day) => {
+            return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        };
+
+        // Parse date key to object
+        const parseDateKey = (dateKey) => {
+            const [year, month, day] = dateKey.split('-').map(Number);
+            return { year, month: month - 1, day };
+        };
+
+        // Arabic Month Names
+        const arabicMonths = [
+            'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+        ];
+
+        const dayNames = ['أحد', 'اثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
+
+        // Priority labels
+        const priorityLabels = {
+            high: 'عالية',
+            medium: 'متوسطة',
+            low: 'منخفضة'
+        };
+
+        // Priority sorting order
+        const priorityOrder = {
+            high: 1,
+            medium: 2,
+            low: 3
+        };
+
+        // Week ranges for each month
+        const getMonthWeeks = (month, year) => {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const weeks = [];
+            
+            weeks.push({ name: 'الأسبوع الأول', days: [1, 2, 3, 4, 5, 6, 7].filter(d => d <= daysInMonth) });
+            weeks.push({ name: 'الأسبوع الثاني', days: [8, 9, 10, 11, 12, 13, 14].filter(d => d <= daysInMonth) });
+            weeks.push({ name: 'الأسبوع الثالث', days: [15, 16, 17, 18, 19, 20, 21].filter(d => d <= daysInMonth) });
+            weeks.push({ name: 'الأسبوع الرابع', days: [22, 23, 24, 25, 26, 27, 28].filter(d => d <= daysInMonth) });
+            if (daysInMonth > 28) {
+                const extraDays = [];
+                for (let d = 29; d <= daysInMonth; d++) extraDays.push(d);
+                weeks.push({ name: 'الأسبوع الخامس', days: extraDays });
+            }
+            
+            return weeks;
+        };
+
+        // Sort tasks by priority, then by time
+        const sortTasks = (tasks) => {
+            return [...tasks].sort((a, b) => {
+                // First sort by priority
+                const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+                if (priorityDiff !== 0) return priorityDiff;
+                
+                // Then by time within same priority
+                if (!a.time && !b.time) return 0;
+                if (!a.time) return 1;
+                if (!b.time) return -1;
+                return a.time.localeCompare(b.time);
+            });
+        };
+
+        // App State
+        let state = {
+            currentYear: getEgyptNow().getFullYear(),
+            currentMonth: getEgyptNow().getMonth(),
+            selectedDate: null,
+            tasks: {},
+            achievements: {
+                totalCompleted: 0,
+                bestStreak: 0,
+                currentStreak: 0
+            },
+            darkMode: false,
+            editingTaskId: null,
+            deletingTaskId: null,
+            notificationsEnabled: false
+        };
+
+        let taskIdCounter = 1;
+        let progressChart = null;
+        let reminderInterval = null;
+
+        // DOM Elements
+        const elements = {
+            currentMonthName: document.getElementById('currentMonthName'),
+            currentYear: document.getElementById('currentYear'),
+            prevMonth: document.getElementById('prevMonth'),
+            nextMonth: document.getElementById('nextMonth'),
+            calendarGrid: document.getElementById('calendarGrid'),
+            weeksContainer: document.getElementById('weeksContainer'),
+            selectedDateDisplay: document.getElementById('selectedDateDisplay'),
+            taskInput: document.getElementById('taskInput'),
+            taskTimeInput: document.getElementById('taskTimeInput'),
+            taskPriorityInput: document.getElementById('taskPriorityInput'),
+            addTaskBtn: document.getElementById('addTaskBtn'),
+            tasksList: document.getElementById('tasksList'),
+            totalTasks: document.getElementById('totalTasks'),
+            completedTasks: document.getElementById('completedTasks'),
+            streakBadge: document.getElementById('streakBadge'),
+            streakCount: document.getElementById('streakCount'),
+            dailyProgressPercent: document.getElementById('dailyProgressPercent'),
+            dailyProgressFill: document.getElementById('dailyProgressFill'),
+            totalCompleted: document.getElementById('totalCompleted'),
+            bestStreak: document.getElementById('bestStreak'),
+            weekCompleted: document.getElementById('weekCompleted'),
+            currentStreak: document.getElementById('currentStreak'),
+            motivationMessage: document.getElementById('motivationMessage'),
+            footerTotal: document.getElementById('footerTotal'),
+            footerCompleted: document.getElementById('footerCompleted'),
+            footerPercent: document.getElementById('footerPercent'),
+            resetMonthBtn: document.getElementById('resetMonthBtn'),
+            clearAllDataBtn: document.getElementById('clearAllDataBtn'),
+            themeToggle: document.getElementById('themeToggle'),
+            editModal: document.getElementById('editModal'),
+            editTaskInput: document.getElementById('editTaskInput'),
+            editTaskTime: document.getElementById('editTaskTime'),
+            editTaskPriority: document.getElementById('editTaskPriority'),
+            cancelEditBtn: document.getElementById('cancelEditBtn'),
+            saveEditBtn: document.getElementById('saveEditBtn'),
+            confirmModal: document.getElementById('confirmModal'),
+            confirmMessage: document.getElementById('confirmMessage'),
+            confirmCancelBtn: document.getElementById('confirmCancelBtn'),
+            confirmDeleteBtn: document.getElementById('confirmDeleteBtn'),
+            quickAddModal: document.getElementById('quickAddModal'),
+            quickTaskInput: document.getElementById('quickTaskInput'),
+            quickTaskTime: document.getElementById('quickTaskTime'),
+            quickTaskPriority: document.getElementById('quickTaskPriority'),
+            fabAddTask: document.getElementById('fabAddTask'),
+            cancelQuickAdd: document.getElementById('cancelQuickAdd'),
+            confirmQuickAdd: document.getElementById('confirmQuickAdd'),
+            celebration: document.getElementById('celebration'),
+            notificationPermission: document.getElementById('notificationPermission'),
+            enableNotifications: document.getElementById('enableNotifications'),
+            progressSection: document.getElementById('progressSection')
+        };
+
+        // Initialize
+        function init() {
+            loadState();
+            renderMonth();
+            renderCalendar();
+            renderWeeks();
+            renderTasks();
+            updateStats();
+            updateAchievements();
+            updateDailyProgress();
+            updateChart();
+            setupEventListeners();
+            applyTheme();
+            checkNotificationPermission();
+            requestNotificationPermissionOnLoad();
+            startReminderCheck();
+            
+            // Select today by default using Egypt timezone
+            const today = getEgyptNow();
+            const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+            selectDate(todayKey);
+        }
+
+        // Load State from LocalStorage
+        function loadState() {
+            try {
+                const saved = localStorage.getItem('dailyTasks');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    state.tasks = parsed.tasks || {};
+                    state.achievements = parsed.achievements || { totalCompleted: 0, bestStreak: 0, currentStreak: 0 };
+                    state.darkMode = parsed.darkMode || false;
+                    state.currentYear = parsed.currentYear || getEgyptNow().getFullYear();
+                    state.currentMonth = parsed.currentMonth || getEgyptNow().getMonth();
+                    state.notificationsEnabled = parsed.notificationsEnabled || false;
+                    
+                    Object.values(state.tasks).forEach(dayTasks => {
+                        dayTasks.forEach(task => {
+                            if (task.id > taskIdCounter) taskIdCounter = task.id + 1;
+                            // Ensure priority exists for old tasks
+                            if (!task.priority) {
+                                task.priority = 'medium';
+                            }
+                        });
+                    });
+                }
+            } catch (e) {
+                console.error('Error loading state:', e);
+            }
+        }
+
+        // Save State to LocalStorage
+        function saveState() {
+            try {
+                localStorage.setItem('dailyTasks', JSON.stringify({
+                    tasks: state.tasks,
+                    achievements: state.achievements,
+                    darkMode: state.darkMode,
+                    currentYear: state.currentYear,
+                    currentMonth: state.currentMonth,
+                    notificationsEnabled: state.notificationsEnabled
+                }));
+            } catch (e) {
+                console.error('Error saving state:', e);
+            }
+        }
+
+        // Check Notification Permission
+        function checkNotificationPermission() {
+            if (!('Notification' in window)) {
+                elements.notificationPermission.classList.add('hidden');
+                return;
+            }
+            
+            if (Notification.permission === 'granted') {
+                state.notificationsEnabled = true;
+                elements.notificationPermission.classList.add('hidden');
+            } else if (Notification.permission === 'denied') {
+                elements.notificationPermission.classList.add('hidden');
+            }
+        }
+
+        // Request notification permission on first load
+        function requestNotificationPermissionOnLoad() {
+            // Only auto-request if not previously asked
+            const hasAskedBefore = localStorage.getItem('notificationAsked');
+            if (!hasAskedBefore && !state.notificationsEnabled) {
+                // Show banner instead of auto-requesting
+                localStorage.setItem('notificationAsked', 'true');
+            }
+        }
+
+        // Request Notification Permission
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('المتصفح لا يدعم الإشعارات');
+                return;
+            }
+            
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    state.notificationsEnabled = true;
+                    elements.notificationPermission.classList.add('hidden');
+                    saveState();
+                    new Notification('المهام اليومية', {
+                        body: 'تم تفعيل الإشعارات بنجاح! 🔔',
+                        icon: 'icon-192.png'
+                    });
+                }
+            });
+        }
+
+        // Send Notification
+        function sendNotification(title, body) {
+            if (state.notificationsEnabled && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: 'icon-192.png',
+                    tag: 'task-reminder'
+                });
+            }
+        }
+
+        // Start Reminder Check
+        function startReminderCheck() {
+            if (reminderInterval) clearInterval(reminderInterval);
+            
+            // Check immediately on load
+            checkTaskReminders();
+            
+            // Then check every minute
+            reminderInterval = setInterval(() => {
+                checkTaskReminders();
+            }, 60000);
+        }
+
+        // Check Task Reminders - Using Egypt Timezone
+        function checkTaskReminders() {
+            const now = getEgyptNow();
+            const todayKey = formatDateKey(now.getFullYear(), now.getMonth(), now.getDate());
+            const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            const todayTasks = state.tasks[todayKey] || [];
+            todayTasks.forEach(task => {
+                if (!task.completed && task.time && task.time === currentTime && !task.reminded) {
+                    sendNotification('تذكير بالمهمة ⏰', `حان وقت تنفيذ: ${task.text}`);
+                    task.reminded = true;
+                    saveState();
+                }
+            });
+
+            // Check for incomplete tasks at end of day (9 PM Egypt time)
+            if (now.getHours() === 21 && now.getMinutes() === 0) {
+                const incomplete = todayTasks.filter(t => !t.completed);
+                if (incomplete.length > 0) {
+                    sendNotification('تذكير قبل النوم 🌙', `لديك ${incomplete.length} مهام لم تنجزها اليوم`);
+                }
+            }
+        }
+
+        // Calculate Streak
+        function calculateStreak() {
+            const today = getEgyptNow();
+            let streak = 0;
+            let bestStreak = state.achievements.bestStreak || 0;
+            let currentStreak = 0;
+            
+            // Check consecutive days backwards from today
+            for (let i = 0; i <= 365; i++) {
+                const checkDate = getEgyptNow();
+                checkDate.setDate(checkDate.getDate() - i);
+                const dateKey = formatDateKey(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+                
+                const dayTasks = state.tasks[dateKey];
+                
+                if (dayTasks && dayTasks.length > 0) {
+                    const completed = dayTasks.filter(t => t.completed).length;
+                    const total = dayTasks.length;
+                    
+                    if (completed === total) {
+                        if (i === 0 || currentStreak > 0) {
+                            currentStreak++;
+                        }
+                        streak++;
+                    } else if (completed > 0) {
+                        // Partial completion doesn't break streak but doesn't add to it either
+                        if (i === 0 || currentStreak > 0) {
+                            currentStreak += 0.5;
+                        }
+                    } else {
+                        break;
+                    }
+                } else if (i > 0) {
+                    // No tasks for this day - check if it's in the past
+                    if (checkDate < today) {
+                        break;
+                    }
+                }
+            }
+
+            state.achievements.currentStreak = Math.floor(currentStreak);
+            if (currentStreak > bestStreak) {
+                state.achievements.bestStreak = Math.floor(currentStreak);
+            }
+
+            return Math.floor(streak);
+        }
+
+        // Update Daily Progress
+        function updateDailyProgress() {
+            const today = getEgyptNow();
+            const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+            const todayTasks = state.tasks[todayKey] || [];
+            
+            const total = todayTasks.length;
+            const completed = todayTasks.filter(t => t.completed).length;
+            const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+            
+            elements.dailyProgressPercent.textContent = `${percent}%`;
+            elements.dailyProgressFill.style.width = `${percent}%`;
+
+            // Show motivation message if all tasks completed
+            if (total > 0 && completed === total) {
+                elements.motivationMessage.classList.add('show');
+                showCelebration();
+            } else {
+                elements.motivationMessage.classList.remove('show');
+            }
+        }
+
+        // Show Celebration
+        function showCelebration() {
+            elements.celebration.classList.add('show');
+            playSuccessSound();
+            setTimeout(() => {
+                elements.celebration.classList.remove('show');
+            }, 3000);
+        }
+
+        // Play success sound
+        function playSuccessSound() {
+            try {
+                // Create a simple success sound using Web Audio API
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // First beep (higher pitch)
+                const oscillator1 = audioContext.createOscillator();
+                const gainNode1 = audioContext.createGain();
+                oscillator1.connect(gainNode1);
+                gainNode1.connect(audioContext.destination);
+                oscillator1.frequency.value = 800;
+                oscillator1.type = 'sine';
+                gainNode1.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode1.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                oscillator1.start(audioContext.currentTime);
+                oscillator1.stop(audioContext.currentTime + 0.2);
+                
+                // Second beep (even higher)
+                setTimeout(() => {
+                    const oscillator2 = audioContext.createOscillator();
+                    const gainNode2 = audioContext.createGain();
+                    oscillator2.connect(gainNode2);
+                    gainNode2.connect(audioContext.destination);
+                    oscillator2.frequency.value = 1000;
+                    oscillator2.type = 'sine';
+                    gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator2.start(audioContext.currentTime);
+                    oscillator2.stop(audioContext.currentTime + 0.3);
+                }, 150);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Play task complete sound
+        function playTaskCompleteSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 600;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.15);
+            } catch (e) {
+                console.log('Audio not supported');
+            }
+        }
+
+        // Update Achievements
+        function updateAchievements() {
+            // Calculate total completed tasks
+            let total = 0;
+            Object.values(state.tasks).forEach(dayTasks => {
+                total += dayTasks.filter(t => t.completed).length;
+            });
+            state.achievements.totalCompleted = total;
+            
+            // Calculate streak
+            calculateStreak();
+            
+            // Calculate week completed
+            const today = getEgyptNow();
+            let weekCompleted = 0;
+            for (let i = 0; i < 7; i++) {
+                const checkDate = getEgyptNow();
+                checkDate.setDate(checkDate.getDate() - i);
+                const dateKey = formatDateKey(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+                const dayTasks = state.tasks[dateKey] || [];
+                weekCompleted += dayTasks.filter(t => t.completed).length;
+            }
+
+            elements.totalCompleted.textContent = state.achievements.totalCompleted;
+            elements.bestStreak.textContent = state.achievements.bestStreak;
+            elements.weekCompleted.textContent = weekCompleted;
+            elements.currentStreak.textContent = state.achievements.currentStreak;
+            elements.streakCount.textContent = state.achievements.currentStreak;
+        }
+
+        // Render Month Header
+        function renderMonth() {
+            elements.currentMonthName.textContent = arabicMonths[state.currentMonth];
+            elements.currentYear.textContent = state.currentYear;
+        }
+
+        // Render Calendar
+        function renderCalendar() {
+            const firstDay = new Date(state.currentYear, state.currentMonth, 1).getDay();
+            const daysInMonth = new Date(state.currentYear, state.currentMonth + 1, 0).getDate();
+            const today = getEgyptNow();
+            const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+            let html = '';
+            
+            // Day headers
+            dayNames.forEach(day => {
+                html += `<div class="calendar-day-header">${day}</div>`;
+            });
+
+            // Empty cells for days before first day
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="calendar-day empty"></div>';
+            }
+
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = formatDateKey(state.currentYear, state.currentMonth, day);
+                const dayTasks = state.tasks[dateKey] || [];
+                const hasTasks = dayTasks.length > 0;
+                const completed = dayTasks.filter(t => t.completed).length;
+                const total = dayTasks.length;
+                const isToday = dateKey === todayKey;
+                const isSelected = dateKey === state.selectedDate;
+                
+                let statusClass = '';
+                let statusIcon = '';
+                
+                if (hasTasks) {
+                    if (completed === total) {
+                        statusClass = 'completed';
+                        statusIcon = '✓';
+                    } else if (completed > 0) {
+                        statusClass = 'partial';
+                        statusIcon = '●';
+                    } else {
+                        statusClass = 'failed';
+                        statusIcon = '✗';
+                    }
+                }
+
+                html += `
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''} ${statusClass}"
+                         onclick="selectDate('${dateKey}')">
+                        <span>${day}</span>
+                        ${hasTasks ? `<span class="day-status-icon">${statusIcon}</span>` : ''}
+                    </div>
+                `;
+            }
+
+            elements.calendarGrid.innerHTML = html;
+        }
+
+        // Render Weeks Grid
+        function renderWeeks() {
+            const weeks = getMonthWeeks(state.currentMonth, state.currentYear);
+            const today = getEgyptNow();
+            const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+            let html = '';
+            weeks.forEach((week, weekIndex) => {
+                html += `
+                    <div class="week-card animate-in" style="animation-delay: ${weekIndex * 0.05}s">
+                        <div class="week-header">
+                            <span class="week-title">${week.name}</span>
+                        </div>
+                        <div class="week-days">
+                `;
+
+                week.days.forEach(day => {
+                    const dateKey = formatDateKey(state.currentYear, state.currentMonth, day);
+                    const dayTasks = state.tasks[dateKey] || [];
+                    const completedCount = dayTasks.filter(t => t.completed).length;
+                    const hasTasks = dayTasks.length > 0;
+                    const isCompleted = hasTasks && completedCount === dayTasks.length;
+                    const isToday = dateKey === todayKey;
+                    const isSelected = dateKey === state.selectedDate;
+
+                    html += `
+                        <div class="day-card ${isToday ? 'today' : ''} ${hasTasks ? 'has-tasks' : ''} ${isCompleted ? 'completed' : ''} ${isSelected ? 'selected' : ''}"
+                             onclick="selectDate('${dateKey}')"
+                             data-date="${dateKey}">
+                            <div class="day-number">${day}</div>
+                            <div class="day-tasks-count">${hasTasks ? `${completedCount}/${dayTasks.length}` : '-'}</div>
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            });
+
+            elements.weeksContainer.innerHTML = html;
+        }
+
+        // Select Date
+        function selectDate(dateKey) {
+            state.selectedDate = dateKey;
+            const { year, month, day } = parseDateKey(dateKey);
+            const date = new Date(year, month, day);
+            const dayName = dayNames[date.getDay()];
+            
+            elements.selectedDateDisplay.textContent = `${dayName} ${day} ${arabicMonths[month]}`;
+            renderTasks();
+            renderCalendar();
+            renderWeeks();
+            saveState();
+        }
+
+        // Render Tasks (with priority sorting)
+        function renderTasks() {
+            if (!state.selectedDate) {
+                elements.tasksList.innerHTML = `
+                    <div class="empty-tasks">
+                        <div class="empty-tasks-icon">📝</div>
+                        <p>اختر يوماً لعرض مهامه</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let tasks = state.tasks[state.selectedDate] || [];
+            
+            // Sort by priority, then by time
+            tasks = sortTasks(tasks);
+
+            if (tasks.length === 0) {
+                elements.tasksList.innerHTML = `
+                    <div class="empty-tasks">
+                        <div class="empty-tasks-icon">✨</div>
+                        <p>لا توجد مهام لهذا اليوم</p>
+                        <p style="font-size: 11px; margin-top: 6px;">أضف مهمة جديدة أدناه</p>
+                    </div>
+                `;
+                return;
+            }
+
+            elements.tasksList.innerHTML = tasks.map(task => `
+                <div class="task-item priority-${task.priority} ${task.completed ? 'completed' : ''}">
+                    <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
+                         onclick="toggleTask(${task.id})"></div>
+                    <div class="task-content">
+                        <div class="task-text">${task.text}</div>
+                        <div class="task-meta">
+                            ${task.time ? `<div class="task-time"><span class="task-reminder-icon">⏰</span>${task.time}</div>` : ''}
+                            <span class="priority-badge ${task.priority}">${priorityLabels[task.priority]}</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="task-action-btn edit" onclick="editTask(${task.id})" title="تعديل">✏️</button>
+                        <button class="task-action-btn delete" onclick="deleteTask(${task.id})" title="حذف">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Add Task (with priority)
+        function addTask(text, time = null, priority = 'medium') {
+            if (!text || !state.selectedDate) return;
+
+            if (!state.tasks[state.selectedDate]) {
+                state.tasks[state.selectedDate] = [];
+            }
+
+            state.tasks[state.selectedDate].push({
+                id: taskIdCounter++,
+                text: text,
+                completed: false,
+                time: time,
+                priority: priority,
+                reminded: false
+            });
+
+            elements.taskInput.value = '';
+            elements.taskTimeInput.value = '';
+            elements.taskPriorityInput.value = 'medium';
+            updatePrioritySelectStyle('medium');
+            saveState();
+            renderTasks();
+            renderCalendar();
+            renderWeeks();
+            updateStats();
+            updateChart();
+            updateDailyProgress();
+            updateAchievements();
+        }
+
+        // Update priority select style
+        function updatePrioritySelectStyle(priority) {
+            elements.taskPriorityInput.className = 'priority-select priority-' + priority;
+        }
+
+        // Toggle Task
+        function toggleTask(taskId) {
+            if (!state.selectedDate || !state.tasks[state.selectedDate]) return;
+
+            const task = state.tasks[state.selectedDate].find(t => t.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+                saveState();
+                renderTasks();
+                renderCalendar();
+                renderWeeks();
+                updateStats();
+                updateChart();
+                updateDailyProgress();
+                updateAchievements();
+            }
+        }
+
+        // Edit Task
+        function editTask(taskId) {
+            if (!state.selectedDate || !state.tasks[state.selectedDate]) return;
+
+            const task = state.tasks[state.selectedDate].find(t => t.id === taskId);
+            if (task) {
+                state.editingTaskId = taskId;
+                elements.editTaskInput.value = task.text;
+                elements.editTaskTime.value = task.time || '';
+                elements.editTaskPriority.value = task.priority || 'medium';
+                elements.editModal.classList.add('active');
+                elements.editTaskInput.focus();
+            }
+        }
+
+        // Save Edit
+        function saveEdit() {
+            if (!state.selectedDate || !state.tasks[state.selectedDate]) return;
+
+            const task = state.tasks[state.selectedDate].find(t => t.id === state.editingTaskId);
+            if (task) {
+                task.text = elements.editTaskInput.value.trim();
+                task.time = elements.editTaskTime.value || null;
+                task.priority = elements.editTaskPriority.value || 'medium';
+                if (task.text) {
+                    saveState();
+                    renderTasks();
+                    renderCalendar();
+                    renderWeeks();
+                }
+            }
+            closeEditModal();
+        }
+
+        // Close Edit Modal
+        function closeEditModal() {
+            elements.editModal.classList.remove('active');
+            state.editingTaskId = null;
+        }
+
+        // Delete Task
+        function deleteTask(taskId) {
+            state.deletingTaskId = taskId;
+            elements.confirmMessage.textContent = 'هل أنت متأكد من حذف هذه المهمة؟';
+            elements.confirmModal.classList.add('active');
+        }
+
+        // Confirm Delete
+        function confirmDelete() {
+            if (!state.selectedDate || !state.tasks[state.selectedDate]) return;
+
+            state.tasks[state.selectedDate] = state.tasks[state.selectedDate].filter(t => t.id !== state.deletingTaskId);
+            
+            if (state.tasks[state.selectedDate].length === 0) {
+delete state.tasks[state.selectedDate];
+            }
+
+            saveState();
+            renderTasks();
+            renderCalendar();
+            renderWeeks();
+            updateStats();
+            updateChart();
+            updateDailyProgress();
+            updateAchievements();
+            closeConfirmModal();
+        }
+
+        // Close Confirm Modal
+        function closeConfirmModal() {
+            elements.confirmModal.classList.remove('active');
+            state.deletingTaskId = null;
+        }
+
+        // Update Statistics
+        function updateStats() {
+            const monthPrefix = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
+            let monthTotal = 0;
+            let monthCompleted = 0;
+
+            Object.keys(state.tasks).forEach(dateKey => {
+                if (dateKey.startsWith(monthPrefix)) {
+                    const dayTasks = state.tasks[dateKey];
+                    monthTotal += dayTasks.length;
+                    monthCompleted += dayTasks.filter(t => t.completed).length;
+                }
+            });
+
+            elements.totalTasks.textContent = monthTotal;
+            elements.completedTasks.textContent = monthCompleted;
+
+            elements.footerTotal.textContent = monthTotal;
+            elements.footerCompleted.textContent = monthCompleted;
+            const percent = monthTotal > 0 ? Math.round((monthCompleted / monthTotal) * 100) : 0;
+            elements.footerPercent.textContent = `${percent}%`;
+        }
+
+        // Update Chart
+        function updateChart() {
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            
+            const weeks = getMonthWeeks(state.currentMonth, state.currentYear);
+            const weekLabels = ['أ 1', 'أ 2', 'أ 3', 'أ 4', 'أ 5'].slice(0, weeks.length);
+            const weekCompleted = [];
+            const weekTotal = [];
+
+            const monthPrefix = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
+
+            weeks.forEach((week) => {
+                let completed = 0;
+                let total = 0;
+                
+                week.days.forEach(day => {
+                    const dateKey = formatDateKey(state.currentYear, state.currentMonth, day);
+                    if (state.tasks[dateKey]) {
+                        state.tasks[dateKey].forEach(task => {
+                            total++;
+                            if (task.completed) completed++;
+                        });
+                    }
+                });
+
+                weekTotal.push(total);
+                weekCompleted.push(completed);
+            });
+
+            const chartData = {
+                labels: weekLabels,
+                datasets: [
+                    {
+                        label: 'مكتملة',
+                        data: weekCompleted,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barThickness: 20
+                    },
+                    {
+                        label: 'إجمالي',
+                        data: weekTotal,
+                        backgroundColor: 'rgba(99, 102, 241, 0.3)',
+                        borderColor: '#6366f1',
+                        borderWidth: 2,
+                        borderRadius: 4,
+                        barThickness: 20
+                    }
+                ]
+            };
+
+            if (progressChart) {
+                progressChart.destroy();
+            }
+
+            progressChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: state.darkMode ? '#cbd5e1' : '#4a5568',
+                                font: { family: 'Cairo', size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: state.darkMode ? '#cbd5e1' : '#4a5568' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: state.darkMode ? '#334155' : '#e2e8f0' },
+                            ticks: { 
+                                color: state.darkMode ? '#cbd5e1' : '#4a5568',
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Navigate Month
+        function navigateMonth(direction) {
+            if (direction === 'prev') {
+                if (state.currentMonth === 0) {
+                    state.currentMonth = 11;
+                    state.currentYear--;
+                } else {
+                    state.currentMonth--;
+                }
+            } else {
+                if (state.currentMonth === 11) {
+                    state.currentMonth = 0;
+                    state.currentYear++;
+                } else {
+                    state.currentMonth++;
+                }
+            }
+            
+            renderMonth();
+            renderCalendar();
+            renderWeeks();
+            updateStats();
+            updateChart();
+            saveState();
+        }
+
+        // Reset Month
+        function resetMonth() {
+            elements.confirmMessage.textContent = 'هل أنت متأكد من إعادة تعيين جميع مهام هذا الشهر؟';
+            elements.confirmDeleteBtn.onclick = () => {
+                const monthPrefix = `${state.currentYear}-${String(state.currentMonth + 1).padStart(2, '0')}`;
+                Object.keys(state.tasks).forEach(dateKey => {
+                    if (dateKey.startsWith(monthPrefix)) {
+                        delete state.tasks[dateKey];
+                    }
+                });
+                saveState();
+                renderTasks();
+                renderCalendar();
+                renderWeeks();
+                updateStats();
+                updateChart();
+                updateDailyProgress();
+                updateAchievements();
+                closeConfirmModal();
+            };
+            elements.confirmModal.classList.add('active');
+        }
+
+        // Clear All Data
+        function clearAllData() {
+            elements.confirmMessage.textContent = 'هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء!';
+            elements.confirmDeleteBtn.onclick = () => {
+                state.tasks = {};
+                state.achievements = { totalCompleted: 0, bestStreak: 0, currentStreak: 0 };
+                taskIdCounter = 1;
+                saveState();
+                renderTasks();
+                renderCalendar();
+                renderWeeks();
+                updateStats();
+                updateChart();
+                updateDailyProgress();
+                updateAchievements();
+                closeConfirmModal();
+            };
+            elements.confirmModal.classList.add('active');
+        }
+
+        // Toggle Theme
+        function toggleTheme() {
+            state.darkMode = !state.darkMode;
+            saveState();
+            applyTheme();
+            updateChart();
+        }
+
+        // Apply Theme
+        function applyTheme() {
+            document.documentElement.setAttribute('data-theme', state.darkMode ? 'dark' : 'light');
+            elements.themeToggle.textContent = state.darkMode ? '☀️' : '🌙';
+        }
+
+        // Quick Add Task
+        function openQuickAdd() {
+            if (!state.selectedDate) {
+                const today = getEgyptNow();
+                const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+                selectDate(todayKey);
+            }
+            elements.quickTaskInput.value = '';
+            elements.quickTaskTime.value = '';
+            elements.quickTaskPriority.value = 'medium';
+            elements.quickAddModal.classList.add('active');
+            elements.quickTaskInput.focus();
+        }
+
+        function closeQuickAdd() {
+            elements.quickAddModal.classList.remove('active');
+        }
+
+        function confirmQuickAdd() {
+            const text = elements.quickTaskInput.value.trim();
+            const time = elements.quickTaskTime.value || null;
+            const priority = elements.quickTaskPriority.value || 'medium';
+            if (text) {
+                addTask(text, time, priority);
+                closeQuickAdd();
+            }
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            elements.prevMonth.addEventListener('click', () => navigateMonth('prev'));
+            elements.nextMonth.addEventListener('click', () => navigateMonth('next'));
+            
+            // Add task with priority
+            elements.addTaskBtn.addEventListener('click', () => {
+                addTask(
+                    elements.taskInput.value, 
+                    elements.taskTimeInput.value || null,
+                    elements.taskPriorityInput.value || 'medium'
+                );
+            });
+            
+            elements.taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addTask(
+                        elements.taskInput.value, 
+                        elements.taskTimeInput.value || null,
+                        elements.taskPriorityInput.value || 'medium'
+                    );
+                }
+            });
+            
+            // Priority select style update
+            elements.taskPriorityInput.addEventListener('change', (e) => {
+                updatePrioritySelectStyle(e.target.value);
+            });
+            
+            elements.resetMonthBtn.addEventListener('click', resetMonth);
+            elements.clearAllDataBtn.addEventListener('click', clearAllData);
+            elements.themeToggle.addEventListener('click', toggleTheme);
+            
+            // Quick Add
+            elements.fabAddTask.addEventListener('click', openQuickAdd);
+            elements.cancelQuickAdd.addEventListener('click', closeQuickAdd);
+            elements.confirmQuickAdd.addEventListener('click', confirmQuickAdd);
+            elements.quickTaskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') confirmQuickAdd();
+            });
+
+            // Edit modal
+            elements.cancelEditBtn.addEventListener('click', closeEditModal);
+            elements.saveEditBtn.addEventListener('click', saveEdit);
+            elements.editTaskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') saveEdit();
+            });
+            
+            // Confirm modal
+            elements.confirmCancelBtn.addEventListener('click', closeConfirmModal);
+            elements.confirmDeleteBtn.addEventListener('click', confirmDelete);
+            
+            // Close modals on overlay click
+            elements.editModal.addEventListener('click', (e) => {
+                if (e.target === elements.editModal) closeEditModal();
+            });
+            elements.confirmModal.addEventListener('click', (e) => {
+                if (e.target === elements.confirmModal) closeConfirmModal();
+            });
+            elements.quickAddModal.addEventListener('click', (e) => {
+                if (e.target === elements.quickAddModal) closeQuickAdd();
+            });
+
+            // Notification permission
+            elements.enableNotifications.addEventListener('click', requestNotificationPermission);
+        }
+
+        // Make functions globally accessible
+        window.selectDate = selectDate;
+        window.toggleTask = toggleTask;
+        window.editTask = editTask;
+        window.deleteTask = deleteTask;
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('SW registered:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+
