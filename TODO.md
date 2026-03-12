@@ -1,41 +1,33 @@
-# Daily Tasks - Push Notifications Implementation
+# Daily Tasks Time Improvements - TODO
 
-## Status: ✅ Enhanced Local Notifications Implemented
+## Approved Plan Steps (Breakdown) - Steps 6-10:
 
-## What Was Done
+### 1. ✅ Create this TODO.md file (Current)
 
-### 1. Updated Service Worker (sw.js)
-- Enhanced push event handling for server push notifications
-- Added message handling for scheduled notifications
-- Improved notification click handling to open app
-- Added background sync support for task reminders
+### 2. ✅ Add UI elements for validation
+### 3. ✅ Add helper functions in JS
+### 4. ✅ Update task object structure
+### 5. ✅ Modify addTask() and handlers
 
-### 2. Updated index.html
-- Fixed CSS syntax errors
-- Enhanced notification permission UI
-- Added push status indicator styles
+### 6. ⬜ Update renderTasks()
+- Migrate existing tasks (if task.time → internalTime + compute displayTime)
+- Display task.displayTime instead of task.time in task-time div
 
-### 3. Created server.js (Optional - requires Node.js)
-- Server for Web Push API implementation
-- Requires Node.js to run
+### 7. ⬜ Update sortTasks() and checkTaskReminders()
+- sortTasks(): Use task.internalTime for time comparisons
+- checkTaskReminders(): Use task.internalTime === currentTime
 
-## How Notifications Work Now
+### 8. ✅ Add real-time validation
+- Event listeners: input/blur on #taskTimeInput, #editTaskTime, #quickTaskTime
+- Toggle .valid/.invalid classes + call showError/clearError on blur
 
-### Local Notifications (Currently Active)
-- ✅ Works when browser/app is open
-- ✅ Reminds at scheduled task time
-- ✅ Daily reminder at 9 PM Egypt time
-- ✅ Task completion celebrations
-- ✅ Sound effects
+### 9. ✅ Update modals (edit/quick add)
+- Ensure real-time validation styling applies on modal open
 
-### Push Notifications (Requires Server)
-To get notifications when app is closed:
-1. Install Node.js
-2. Run: `npm install`
-3. Run: `node server.js`
-4. Open app via server URL
-5. Subscribe to push notifications
+### 10. ⬜ Test & attempt_completion
+- Test: add/edit without time → blocks + red border/error "Please select a time for the task."
+- Test: 12h display (e.g., 1:30 م without leading zero), sorting, reminders (Egypt GMT+2)
+- Mobile/desktop smoothness
+- Update TODO.md all ✅, progress 10/10
 
-## Current Limitation
-Since Node.js is not installed on this system, only local browser notifications are available. These work when the app is open in a browser tab or as a PWA.
-
+**Progress: 5/10 → Target 10/10**

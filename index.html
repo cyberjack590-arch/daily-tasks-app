@@ -627,6 +627,31 @@
             transition: var(--transition);
         }
 
+        .task-time-input.invalid {
+            border-color: var(--danger);
+            background: var(--danger-soft);
+        }
+
+        .task-time-input.valid {
+            border-color: var(--success);
+            background: var(--success-soft);
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 12px;
+            padding: 4px 8px;
+            background: var(--danger-soft);
+            border-radius: var(--radius-xs);
+            margin-top: 4px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.show {
+            opacity: 1;
+        }
+
         .task-time-input:focus {
             outline: none;
             border-color: var(--accent-primary);
@@ -1253,6 +1278,10 @@
                 width: 100%;
             }
 
+            .task-time-input {
+                width: 100%;
+            }
+
             .task-input-group .add-task-btn {
                 width: 100%;
             }
@@ -1475,8 +1504,9 @@
                         اختر يوماً
                     </div>
                     <div class="task-input-group">
+                        <label for="taskTimeInput" style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">وقت المهمة (مطلوب) *</label>
                         <input type="text" class="task-input" id="taskInput" placeholder="أضف مهمة جديدة...">
-                        <input type="time" class="task-time-input" id="taskTimeInput" title="تذكير">
+                        <input type="time" class="task-time-input" id="taskTimeInput" required>
                         <select class="priority-select" id="taskPriorityInput" title="الأولوية">
                             <option value="high">عالية</option>
                             <option value="medium" selected>متوسطة</option>
@@ -1484,6 +1514,7 @@
                         </select>
                         <button class="add-task-btn" id="addTaskBtn">+</button>
                     </div>
+                    <div id="taskError" class="error-message" style="display: none;"></div>
                     <div class="tasks-list" id="tasksList">
                         <div class="empty-tasks">
                             <div class="empty-tasks-icon">📝</div>
@@ -1660,6 +1691,55 @@
             low: 3
         };
 
+        // Helper functions for time validation
+        function formatTo12Hour(time24) {
+            if (!time24) return '';
+            const [hours, minutes] = time24.split(':').map(Number);
+            const period = hours >= 12 ? 'م' : 'ص';
+            const displayHours = hours % 12 || 12;
+            return `${displayHours}:${String(minutes).padStart(2, '0')} ${period}`;
+        }
+
+function showError(message) {
+            const errorEl = document.getElementById('taskError');
+            if (errorEl) {
+                errorEl.textContent = message === 'time-required' ? 'يرجى اختيار وقت للمهمة.' : message;
+                errorEl.classList.add('show');
+            }
+        }
+
+        function clearError() {
+            const errorEl = document.getElementById('taskError');
+            if (errorEl) {
+                errorEl.classList.remove('show');
+                errorEl.textContent = '';
+            }
+        }
+
+        function validateTime(timeStr) {
+            return timeStr && timeStr.trim() !== '';
+        }
+
+        function validateTimeInput(timeInput) {
+            const time = timeInput.value;
+            clearError();
+            timeInput.classList.remove('valid', 'invalid');
+            
+            if (validateTime(time)) {
+                timeInput.classList.add('valid');
+            } else {
+                timeInput.classList.add('invalid');
+            }
+        }
+
+        function setupTimeValidation(timeInputId) {
+            const timeInput = document.getElementById(timeInputId);
+            if (timeInput) {
+                timeInput.addEventListener('input', () => validateTimeInput(timeInput));
+                timeInput.addEventListener('blur', () => validateTimeInput(timeInput));
+            }
+        }
+
         // Week ranges for each month
         const getMonthWeeks = (month, year) => {
             const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -1686,10 +1766,10 @@
                 if (priorityDiff !== 0) return priorityDiff;
                 
                 // Then by time within same priority
-                if (!a.time && !b.time) return 0;
-                if (!a.time) return 1;
-                if (!b.time) return -1;
-                return a.time.localeCompare(b.time);
+                if (!a.internalTime && !b.internalTime) return 0;
+                if (!a.internalTime) return 1;
+                if (!b.internalTime) return -1;
+                return a.internalTime.localeCompare(b.internalTime);
             });
         };
 
@@ -1807,6 +1887,11 @@
                     Object.values(state.tasks).forEach(dayTasks => {
                         dayTasks.forEach(task => {
                             if (task.id > taskIdCounter) taskIdCounter = task.id + 1;
+                            // Migrate old tasks to new structure
+                            if (task.time && !task.internalTime) {
+                                task.internalTime = task.time;
+                                task.displayTime = formatTo12Hour(task.time);
+                            }
                             // Ensure priority exists for old tasks
                             if (!task.priority) {
                                 task.priority = 'medium';
@@ -1912,7 +1997,7 @@
             
             const todayTasks = state.tasks[todayKey] || [];
             todayTasks.forEach(task => {
-                if (!task.completed && task.time && task.time === currentTime && !task.reminded) {
+                if (!task.completed && task.internalTime && task.internalTime === currentTime && !task.reminded) {
                     sendNotification('تذكير بالمهمة ⏰', `حان وقت تنفيذ: ${task.text}`);
                     task.reminded = true;
                     saveState();
@@ -2245,7 +2330,7 @@
                     <div class="task-content">
                         <div class="task-text">${task.text}</div>
                         <div class="task-meta">
-                            ${task.time ? `<div class="task-time"><span class="task-reminder-icon">⏰</span>${task.time}</div>` : ''}
+            ${task.displayTime ? `<div class="task-time"><span class="task-reminder-icon">⏰</span>${task.displayTime}</div>` : ''}
                             <span class="priority-badge ${task.priority}">${priorityLabels[task.priority]}</span>
                         </div>
                     </div>
@@ -2261,6 +2346,13 @@
         function addTask(text, time = null, priority = 'medium') {
             if (!text || !state.selectedDate) return;
 
+            // Validate time is required
+                if (!validateTime(time)) {
+                    showError('time-required');
+                    return;
+                }
+            clearError();
+
             if (!state.tasks[state.selectedDate]) {
                 state.tasks[state.selectedDate] = [];
             }
@@ -2269,7 +2361,8 @@
                 id: taskIdCounter++,
                 text: text,
                 completed: false,
-                time: time,
+                internalTime: time,
+                displayTime: formatTo12Hour(time),
                 priority: priority,
                 reminded: false
             });
@@ -2319,10 +2412,13 @@
             if (task) {
                 state.editingTaskId = taskId;
                 elements.editTaskInput.value = task.text;
-                elements.editTaskTime.value = task.time || '';
+                elements.editTaskTime.value = task.internalTime || '';
                 elements.editTaskPriority.value = task.priority || 'medium';
                 elements.editModal.classList.add('active');
-                elements.editTaskInput.focus();
+                setTimeout(() => {
+                    validateTimeInput(elements.editTaskTime);
+                    elements.editTaskInput.focus();
+                }, 100);
             }
         }
 
@@ -2333,7 +2429,14 @@
             const task = state.tasks[state.selectedDate].find(t => t.id === state.editingTaskId);
             if (task) {
                 task.text = elements.editTaskInput.value.trim();
-                task.time = elements.editTaskTime.value || null;
+                const time = elements.editTaskTime.value;
+                if (!validateTime(time)) {
+                    showError('وقت المهمة مطلوب');
+                    return;
+                }
+                clearError();
+                task.internalTime = time;
+                task.displayTime = formatTo12Hour(time);
                 task.priority = elements.editTaskPriority.value || 'medium';
                 if (task.text) {
                     saveState();
@@ -2592,7 +2695,10 @@ delete state.tasks[state.selectedDate];
             elements.quickTaskTime.value = '';
             elements.quickTaskPriority.value = 'medium';
             elements.quickAddModal.classList.add('active');
-            elements.quickTaskInput.focus();
+            setTimeout(() => {
+                validateTimeInput(elements.quickTaskTime);
+                elements.quickTaskInput.focus();
+            }, 100);
         }
 
         function closeQuickAdd() {
@@ -2601,35 +2707,51 @@ delete state.tasks[state.selectedDate];
 
         function confirmQuickAdd() {
             const text = elements.quickTaskInput.value.trim();
-            const time = elements.quickTaskTime.value || null;
+            const time = elements.quickTaskTime.value;
             const priority = elements.quickTaskPriority.value || 'medium';
-            if (text) {
-                addTask(text, time, priority);
-                closeQuickAdd();
+            if (!text) return;
+            if (!validateTime(time)) {
+                showError('وقت المهمة مطلوب');
+                return;
             }
+            clearError();
+            addTask(text, time, priority);
+            closeQuickAdd();
         }
 
         // Setup Event Listeners
         function setupEventListeners() {
+            // Time validation for all time inputs
+            setupTimeValidation('taskTimeInput');
+            setupTimeValidation('editTaskTime');
+            setupTimeValidation('quickTaskTime');
             elements.prevMonth.addEventListener('click', () => navigateMonth('prev'));
             elements.nextMonth.addEventListener('click', () => navigateMonth('next'));
             
             // Add task with priority
             elements.addTaskBtn.addEventListener('click', () => {
-                addTask(
-                    elements.taskInput.value, 
-                    elements.taskTimeInput.value || null,
-                    elements.taskPriorityInput.value || 'medium'
-                );
+                const text = elements.taskInput.value.trim();
+                if (!text) return;
+                const time = elements.taskTimeInput.value;
+                if (!validateTime(time)) {
+                    showError('وقت المهمة مطلوب');
+                    return;
+                }
+                clearError();
+                addTask(text, time, elements.taskPriorityInput.value || 'medium');
             });
             
             elements.taskInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    addTask(
-                        elements.taskInput.value, 
-                        elements.taskTimeInput.value || null,
-                        elements.taskPriorityInput.value || 'medium'
-                    );
+                    const text = elements.taskInput.value.trim();
+                    if (!text) return;
+                    const time = elements.taskTimeInput.value;
+                    if (!validateTime(time)) {
+                        showError('وقت المهمة مطلوب');
+                        return;
+                    }
+                    clearError();
+                    addTask(text, time, elements.taskPriorityInput.value || 'medium');
                 }
             });
             
